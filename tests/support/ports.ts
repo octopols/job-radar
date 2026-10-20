@@ -1,0 +1,3 @@
+export const FIXTURE_BOARD_PORT = 46871;
+export const PUSH_ENDPOINT_PORT = 46872;
+export const TEST_ENGINE_PORT = 46873;

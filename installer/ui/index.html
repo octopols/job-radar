@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="utf-8" />
+	<title>Install Job Radar</title>
+	<link rel="stylesheet" href="setup.css" />
+</head>
+<body>
+	<header class="titlebar" data-tauri-drag-region>
+		<span class="titlebar-name" data-tauri-drag-region>Job Radar Setup</span>
+		<button class="window-button" id="minimize" aria-label="Minimize">
+			<svg viewBox="0 0 12 12"><path d="M2 6h8" /></svg>
+		</button>
+		<button class="window-button close" id="close" aria-label="Close">
+			<svg viewBox="0 0 12 12"><path d="M3 3l6 6M9 3l-6 6" /></svg>
+		</button>
+	</header>
+
+	<main>
+		<div class="mark" aria-hidden="true">
+			<svg viewBox="0 0 64 64">
+				<defs>
+					<linearGradient id="trail" gradientUnits="userSpaceOnUse" x1="15" y1="26" x2="32" y2="14">
+						<stop offset="0" stop-color="#fff" stop-opacity="0" />
+						<stop offset="1" stop-color="#fff" stop-opacity="0.42" />
+					</linearGradient>
+				</defs>
+				<rect width="64" height="64" rx="14" fill="var(--brand)" />
+				<g class="sweep">
+					<path class="trail" d="M32 32 L15.09 25.84 A18 18 0 0 1 32 14 Z" fill="url(#trail)" />
+					<path d="M32 32 32 14" stroke="#fff" stroke-width="4" stroke-linecap="round" />
+				</g>
+				<g fill="none" stroke="#fff" stroke-width="4">
+					<circle cx="32" cy="32" r="18" />
+					<circle cx="32" cy="32" r="9" />
+				</g>
+				<circle cx="32" cy="32" r="3" fill="#fff" />
+			</svg>
+			<span class="badge"><svg viewBox="0 0 16 16"><path d="M4 8.5l2.5 2.5L12 5.5" /></svg></span>
+		</div>
+
+		<section class="screen" id="choose">
+			<h1>Job Radar</h1>
+			<p class="lead">Jobs that fit you, the moment companies post them.</p>
+			<fieldset class="scopes">
+				<legend>Install for</legend>
+				<label class="scope">
+					<input type="radio" name="scope" value="user" checked />
+					<span class="scope-text">
+						<span class="scope-title">Just me</span>
+						<span class="scope-detail">No administrator approval needed</span>
+					</span>
+				</label>
+				<label class="scope">
+					<input type="radio" name="scope" value="machine" />
+					<span class="scope-text">
+						<span class="scope-title">Everyone on this PC</span>
+						<span class="scope-detail">Windows asks for administrator approval</span>
+					</span>
+				</label>
+			</fieldset>
+			<div class="actions">
+				<button class="primary" id="install">Install</button>
+				<p class="fine" id="location"></p>
+			</div>
+		</section>
+
+		<section class="screen" id="installing" hidden>
+			<h1>Installing Job Radar</h1>
+			<p class="lead">This takes about a minute.</p>
+			<div class="progress" role="progressbar" aria-label="Installation progress" aria-valuemin="0" aria-valuemax="100">
+				<div class="progress-fill" id="progress-fill"></div>
+			</div>
+			<p class="fine" id="progress-text">Getting ready</p>
+		</section>
+
+		<section class="screen" id="done" hidden>
+			<h1>You're all set</h1>
+			<p class="lead">Job Radar is in your Start menu and on your desktop.</p>
+			<div class="actions">
+				<button class="primary" id="open">Open Job Radar</button>
+				<button class="quiet" id="finish">Close</button>
+			</div>
+		</section>
+
+		<section class="screen" id="failed" hidden>
+			<h1>Installation didn't finish</h1>
+			<p class="lead" id="error"></p>
+			<div class="actions">
+				<button class="primary" id="retry">Try again</button>
+			</div>
+		</section>
+	</main>
+
+	<script src="setup.js"></script>
+</body>
+</html>

@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="utf-8" />
+	<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'" />
+	<title>Job Radar</title>
+	<style>
+		:root {
+			--background: #ffffff;
+			--foreground: #09090b;
+			--muted: #71717b;
+			--brand: #c2410c;
+			--sweep-period: 2.4s;
+			color-scheme: light dark;
+		}
+		@media (prefers-color-scheme: dark) {
+			:root {
+				--background: #09090b;
+				--foreground: #fafafa;
+				--muted: #9f9fa9;
+			}
+		}
+		* {
+			box-sizing: border-box;
+		}
+		html,
+		body {
+			height: 100%;
+			margin: 0;
+		}
+		body {
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			justify-content: center;
+			gap: 22px;
+			background: var(--background);
+			color: var(--foreground);
+			font-family: "Segoe UI Variable Display", "Segoe UI", system-ui, sans-serif;
+			-webkit-app-region: drag;
+			user-select: none;
+			cursor: default;
+		}
+		.mark {
+			width: 112px;
+			height: 112px;
+			filter: drop-shadow(0 10px 24px rgb(194 65 12 / 0.28));
+		}
+		.sweep {
+			transform-origin: 32px 32px;
+			animation: sweep var(--sweep-period) linear infinite;
+		}
+		.blip {
+			opacity: 0;
+			transform-origin: 43px 24px;
+			animation: blip var(--sweep-period) linear infinite;
+		}
+		@keyframes sweep {
+			to {
+				transform: rotate(360deg);
+			}
+		}
+		@keyframes blip {
+			0%,
+			13% {
+				opacity: 0;
+				transform: scale(0.6);
+			}
+			16% {
+				opacity: 1;
+				transform: scale(1.25);
+			}
+			60%,
+			100% {
+				opacity: 0;
+				transform: scale(1);
+			}
+		}
+		.name {
+			margin: 0;
+			font-size: 21px;
+			font-weight: 600;
+			letter-spacing: -0.01em;
+		}
+		.status {
+			min-height: 18px;
+			margin: -12px 0 0;
+			font-size: 13px;
+			color: var(--muted);
+			transition: opacity 160ms ease;
+		}
+		@media (prefers-reduced-motion: reduce) {
+			.sweep,
+			.blip {
+				animation: none;
+			}
+			.sweep {
+				transform: rotate(45deg);
+			}
+		}
+	</style>
+</head>
+<body>
+	<svg class="mark" viewBox="0 0 64 64" aria-hidden="true">
+		<defs>
+			<linearGradient id="trail" gradientUnits="userSpaceOnUse" x1="15" y1="26" x2="32" y2="14">
+				<stop offset="0" stop-color="#fff" stop-opacity="0" />
+				<stop offset="1" stop-color="#fff" stop-opacity="0.42" />
+			</linearGradient>
+		</defs>
+		<rect width="64" height="64" rx="14" fill="var(--brand)" />
+		<g class="sweep">
+			<path d="M32 32 L15.09 25.84 A18 18 0 0 1 32 14 Z" fill="url(#trail)" />
+			<path d="M32 32 32 14" stroke="#fff" stroke-width="4" stroke-linecap="round" />
+		</g>
+		<g fill="none" stroke="#fff" stroke-width="4">
+			<circle cx="32" cy="32" r="18" />
+			<circle cx="32" cy="32" r="9" />
+		</g>
+		<circle class="blip" cx="43" cy="24" r="2.6" fill="#fff" />
+		<circle cx="32" cy="32" r="3" fill="#fff" />
+	</svg>
+	<p class="name">Job Radar</p>
+	<p class="status" id="status" role="status">Starting up</p>
+	<script>
+		const status = document.getElementById("status");
+		window.setStatus = (text) => {
+			status.style.opacity = "0";
+			setTimeout(() => {
+				status.textContent = text;
+				status.style.opacity = "1";
+			}, 160);
+		};
+	</script>
+</body>
+</html>
