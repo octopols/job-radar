@@ -8,16 +8,12 @@ class SetupScreens {
 
 	async start() {
 		this.#info = await invoke("info");
-		const button = document.getElementById("install");
-		if (this.#info.installedVersion) {
-			button.textContent = this.#info.installedVersion === this.#info.version ? "Reinstall" : `Update to ${this.#info.version}`;
-		}
 		for (const option of document.querySelectorAll("input[name=scope]")) {
-			option.addEventListener("change", () => this.#showLocation());
+			option.addEventListener("change", () => this.#showScope());
 		}
-		this.#showLocation();
+		this.#showScope();
 
-		button.addEventListener("click", () => this.#install());
+		document.getElementById("install").addEventListener("click", () => this.#install());
 		document.getElementById("retry").addEventListener("click", () => this.#show("choose"));
 		document.getElementById("open").addEventListener("click", () => this.#openApp());
 		document.getElementById("finish").addEventListener("click", () => appWindow.close());
@@ -31,9 +27,19 @@ class SetupScreens {
 		return document.querySelector("input[name=scope]:checked").value;
 	}
 
-	#showLocation() {
-		const dir = this.#scope() === "user" ? this.#info.userDir : this.#info.machineDir;
+	#showScope() {
+		const forUser = this.#scope() === "user";
+		const dir = forUser ? this.#info.userDir : this.#info.machineDir;
+		const installedVersion = forUser ? this.#info.userInstalledVersion : this.#info.machineInstalledVersion;
 		document.getElementById("location").textContent = `Installs to ${dir}`;
+		document.getElementById("install").textContent = SetupScreens.#installLabel(installedVersion, this.#info.version);
+	}
+
+	static #installLabel(installedVersion, version) {
+		if (!installedVersion) {
+			return "Install";
+		}
+		return installedVersion === version ? "Reinstall" : `Update to ${version}`;
 	}
 
 	async #install() {

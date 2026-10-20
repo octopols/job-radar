@@ -16,6 +16,7 @@ const PAYLOAD: &[u8] = include_bytes!(env!("JOB_RADAR_PAYLOAD"));
 const UNPACKED_BYTES: &str = env!("JOB_RADAR_UNPACKED_BYTES");
 const VERSION: &str = env!("JOB_RADAR_VERSION");
 const UNINSTALL_KEY: &str = r"Software\Microsoft\Windows\CurrentVersion\Uninstall\254184f5-585d-5c6c-8882-5b9023794fc8";
+const APP_FOLDER: &str = "Job Radar";
 const CREATE_NO_WINDOW: u32 = 0x0800_0000;
 const PROGRESS_INTERVAL: Duration = Duration::from_millis(250);
 
@@ -43,9 +44,19 @@ impl Scope {
 
 	fn default_dir(self) -> PathBuf {
 		match self {
-			Scope::User => PathBuf::from(env("LOCALAPPDATA")).join("Programs").join("job-radar"),
-			Scope::Machine => PathBuf::from(env("ProgramFiles")).join("Job Radar"),
+			Scope::User => PathBuf::from(env("LOCALAPPDATA")).join("Programs").join(APP_FOLDER),
+			Scope::Machine => PathBuf::from(env("ProgramFiles")).join(APP_FOLDER),
 		}
+	}
+
+	fn installed_version(self) -> Option<String> {
+		registry_value(self.registry_root(), "DisplayVersion")
+	}
+
+	fn installed_dir(self) -> Option<PathBuf> {
+		let uninstall_command = registry_value(self.registry_root(), "UninstallString")?;
+		let uninstaller = uninstall_command.trim_start_matches('"').split('"').next()?;
+		Path::new(uninstaller).parent().map(Path::to_path_buf)
 	}
 }
 
@@ -53,7 +64,8 @@ impl Scope {
 #[serde(rename_all = "camelCase")]
 struct SetupInfo {
 	version: &'static str,
-	installed_version: Option<String>,
+	user_installed_version: Option<String>,
+	machine_installed_version: Option<String>,
 	user_dir: String,
 	machine_dir: String,
 }
@@ -78,10 +90,6 @@ fn registry_value(root: &str, name: &str) -> Option<String> {
 	line.split("REG_SZ").nth(1).map(|value| value.trim().to_string())
 }
 
-fn installed_version() -> Option<String> {
-	registry_value("HKCU", "DisplayVersion").or_else(|| registry_value("HKLM", "DisplayVersion"))
-}
-
 fn directory_size(path: &Path) -> u64 {
 	let Ok(entries) = fs::read_dir(path) else {
 		return 0;
@@ -100,9 +108,10 @@ fn directory_size(path: &Path) -> u64 {
 fn info() -> SetupInfo {
 	SetupInfo {
 		version: VERSION,
-		installed_version: installed_version(),
-		user_dir: Scope::User.default_dir().display().to_string(),
-		machine_dir: Scope::Machine.default_dir().display().to_string(),
+		user_installed_version: Scope::User.installed_version(),
+		machine_installed_version: Scope::Machine.installed_version(),
+		user_dir: Scope::User.installed_dir().unwrap_or_else(|| Scope::User.default_dir()).display().to_string(),
+		machine_dir: Scope::Machine.installed_dir().unwrap_or_else(|| Scope::Machine.default_dir()).display().to_string(),
 	}
 }
 
@@ -120,7 +129,7 @@ fn run_installer(app: &AppHandle, scope: Scope) -> Result<String, String> {
 	let installer = work_dir.join("JobRadar-Installer.exe");
 	fs::write(&installer, PAYLOAD).map_err(|error| format!("Could not prepare the installer: {error}"))?;
 
-	let target = scope.default_dir();
+	let target = scope.installed_dir().unwrap_or_else(|| scope.default_dir());
 	let expected = UNPACKED_BYTES.parse::<f64>().unwrap_or(0.0).max(1.0);
 	let done = Arc::new(AtomicBool::new(false));
 	let watcher = {
@@ -157,8 +166,7 @@ fn run_installer(app: &AppHandle, scope: Scope) -> Result<String, String> {
 	match status {
 		Ok(status) if status.success() => {
 			let _ = app.emit("progress", Progress { fraction: 1.0 });
-			let location = registry_value(scope.registry_root(), "InstallLocation").map(PathBuf::from).unwrap_or(target);
-			Ok(location.display().to_string())
+			Ok(scope.installed_dir().unwrap_or(target).display().to_string())
 		}
 		Ok(_) if scope == Scope::Machine => Err("Installing for everyone needs administrator approval. Try again and choose Yes, or install just for you.".into()),
 		Ok(status) => Err(format!("The installer stopped with code {}. Close Job Radar if it is running, then try again.", status.code().unwrap_or(-1))),
