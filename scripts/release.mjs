@@ -24,7 +24,7 @@ class ReleaseBuilder {
 		this.#stageEngine();
 		execFileSync(process.execPath, ["scripts/build-desktop.mjs"], { stdio: "inherit" });
 		await buildRenderer({ logLevel: "warn" });
-		await buildApp({ targets: this.#targets(), config: ReleaseBuilder.#config() });
+		await buildApp({ targets: this.#targets(), config: ReleaseBuilder.#config(), publish: "never" });
 		if (process.platform === "win32" && !this.#unpackedOnly) {
 			this.#buildSetupWindow();
 		}
